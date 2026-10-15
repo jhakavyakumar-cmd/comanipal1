@@ -4,18 +4,30 @@ import { generateData } from './generator'
 const DATA_KEY = 'ps16-synthetic-data-v1'
 
 export function loadData(): AppData {
-  const cached = localStorage.getItem(DATA_KEY)
-  if (cached) {
-    try { return JSON.parse(cached) as AppData } catch { localStorage.removeItem(DATA_KEY) }
+  try {
+    const cached = localStorage.getItem(DATA_KEY)
+    if (cached) {
+      return JSON.parse(cached) as AppData
+    }
+  } catch {
+    try {
+      localStorage.removeItem(DATA_KEY)
+    } catch {}
   }
   const data = generateData()
-  localStorage.setItem(DATA_KEY, JSON.stringify(data))
+  try {
+    localStorage.setItem(DATA_KEY, JSON.stringify(data))
+  } catch (e) {
+    console.warn('[Storage] Could not cache synthetic dataset in localStorage; continuing with memory dataset:', e)
+  }
   return data
 }
 
 export function resetData() {
-  localStorage.removeItem(DATA_KEY)
-  localStorage.removeItem('ps16-decisions')
-  localStorage.removeItem('ps16-alerts')
+  try {
+    localStorage.removeItem(DATA_KEY)
+    localStorage.removeItem('ps16-decisions')
+    localStorage.removeItem('ps16-alerts')
+  } catch {}
   window.location.reload()
 }

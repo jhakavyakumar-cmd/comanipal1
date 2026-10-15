@@ -14,11 +14,28 @@ interface Ctx {
 
 const AppContext = createContext<Ctx>(null as any)
 
+function safeStorageGet<T>(key: string, fallback: T): T {
+  try {
+    const val = localStorage.getItem(key)
+    return val ? JSON.parse(val) : fallback
+  } catch {
+    return fallback
+  }
+}
+
+function safeStorageSet(key: string, value: any) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value))
+  } catch (err) {
+    console.warn(`[Storage] Failed to save key "${key}":`, err)
+  }
+}
+
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const data = useMemo(() => loadData(), [])
-  const [decisions, setDecisions] = useState<Record<string, AnalystDecision>>(() => {
-    try { return JSON.parse(localStorage.getItem('ps16-decisions') || '{}') } catch { return {} }
-  })
+  const [decisions, setDecisions] = useState<Record<string, AnalystDecision>>(() =>
+    safeStorageGet('ps16-decisions', {})
+  )
 
   const confirmedAccounts = useMemo(
     () => Object.values(decisions).filter(d => d.confirmed).map(d => d.account_id),
@@ -28,10 +45,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const scores = useMemo(() => scoreAccounts(data, confirmedAccounts), [data, confirmedAccounts])
 
   const [alerts, setAlerts] = useState<Alert[]>(() => {
-    try {
-      const saved = localStorage.getItem('ps16-alerts')
-      if (saved) return JSON.parse(saved)
-    } catch {}
+    const saved = safeStorageGet<Alert[] | null>('ps16-alerts', null)
+    if (saved && Array.isArray(saved) && saved.length > 0) return saved
     return scores.filter(s => s.total >= 50).map(s => ({
       id: s.account_id,
       account_id: s.account_id,
@@ -44,8 +59,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }))
   })
 
-  useEffect(() => { localStorage.setItem('ps16-decisions', JSON.stringify(decisions)) }, [decisions])
-  useEffect(() => { localStorage.setItem('ps16-alerts', JSON.stringify(alerts)) }, [alerts])
+  useEffect(() => {
+    safeStorageSet('ps16-decisions', decisions)
+  }, [decisions])
+
+  useEffect(() => {
+    safeStorageSet('ps16-alerts', alerts)
+  }, [alerts])
 
   const updateDecision = (account_id: string, status: AlertStatus, note: string, confirmed: boolean) => {
     setDecisions(prev => ({

@@ -40,8 +40,8 @@ export function generateData(): AppData {
   const groundTruth: GroundTruth[] = []
   const rings: Ring[] = []
 
-  const totalAccounts = 1500
-  const ringCount = 24
+  const totalAccounts = 400
+  const ringCount = 14
   const ringAccounts = new Set<string>()
   const accountRing = new Map<string, string>()
 
@@ -91,7 +91,7 @@ export function generateData(): AppData {
     })
   }
 
-  for (let i = 0; i < 900; i++) {
+  for (let i = 0; i < 250; i++) {
     const id = `DEV${String(i + 1).padStart(5, '0')}`
     devices.push({
       device_id: id,
@@ -175,10 +175,10 @@ export function generateData(): AppData {
     }
   }
 
-  for (let i = 0; i < 80; i++) {
+  for (let i = 0; i < 25; i++) {
     const a = pick(normalAccounts)
     const t = addDays(new Date('2024-03-01'), randInt(0, 100))
-    for (let j = 0; j < 6; j++) {
+    for (let j = 0; j < 5; j++) {
       transactions.push(tx(a.account_id, pick(normalAccounts).account_id, addMinutes(t, j * 7),
         randAmount(20000, 80000), accountDevice.get(a.account_id), accountIp.get(a.account_id)))
     }
@@ -204,7 +204,7 @@ export function generateData(): AppData {
   }
 
   let crSeq = 1
-  for (let i = 0; i < 3500; i++) {
+  for (let i = 0; i < 600; i++) {
     const from = pick(accounts).account_id
     const to = pick(accounts).account_id
     const time = addDays(new Date('2024-01-01'), randInt(0, 180))
